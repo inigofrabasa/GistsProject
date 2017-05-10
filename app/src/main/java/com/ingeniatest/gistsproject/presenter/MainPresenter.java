@@ -12,13 +12,16 @@ import com.ingeniatest.gistsproject.model.Files;
 import com.ingeniatest.gistsproject.model.Gist;
 import com.ingeniatest.gistsproject.model.Owner;
 import com.ingeniatest.gistsproject.request.GistsRequest;
+import com.ingeniatest.gistsproject.sqlite.CreateGists;
 import com.ingeniatest.gistsproject.sqlite.GistSQLiteHelper;
+import com.ingeniatest.gistsproject.sqlite.ObtainGists;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 public class MainPresenter {
 
@@ -27,6 +30,8 @@ public class MainPresenter {
     private GistsRequest gistsRequest;
     private ArrayList<Gist> serviceGists;
     private ArrayList<Gist> dataBaseGists;
+    private CreateGists createGists;
+    private ObtainGists obtainGists;
 
     //Handler for autoRefresh
     Handler handler;
@@ -114,102 +119,22 @@ public class MainPresenter {
     }
 
     private ArrayList<Gist> getAllGists(){
-        String gistQueryOwner ="select * from Gist order by datetime(createdAt) desc";
-        Cursor cursor = db.rawQuery(gistQueryOwner, null);
-        ArrayList<Gist> inGists = new ArrayList<>();
+        try {
+            obtainGists = new ObtainGists(db);
+            return obtainGists.execute().get();
+        } catch (ExecutionException e) {
+        } catch (InterruptedException f) {}
 
-        if (cursor.moveToFirst()){
-            while(cursor.isAfterLast() == false){
-
-                Gist gist = new Gist();
-                gist.setId(cursor.getString(cursor.getColumnIndex("id")));
-                gist.setCreatedAt(cursor.getString(cursor.getColumnIndex("createdAt")));
-                gist.setDescription(cursor.getString(cursor.getColumnIndex("description")));
-
-                //Get Owner
-                String selectQueryOwner = "select * from Owner where id = " + "'" + gist.getId().toString() + "'";
-                Cursor ownerCursor = db.rawQuery(selectQueryOwner, null);
-                if (ownerCursor != null && ownerCursor.moveToFirst()) {
-                    Owner owner = new Owner();
-                    owner.setId(ownerCursor.getString((ownerCursor.getColumnIndex("id"))));
-                    owner.setLogin(ownerCursor.getString((ownerCursor.getColumnIndex("login"))));
-                    owner.setAvatarUrl(ownerCursor.getString((ownerCursor.getColumnIndex("avatarUrl"))));
-
-                    gist.setOwner(owner);
-                }
-
-                //Get File
-                String selectQueryFile = "select * from File where id = " + "'" + gist.getId().toString() + "'";
-                Cursor fileCursor = db.rawQuery(selectQueryFile, null);
-                if (fileCursor != null && fileCursor.moveToFirst()) {
-                    File file = new File();
-                    file.setId(fileCursor.getString((fileCursor.getColumnIndex("id"))));
-                    file.setFilename(fileCursor.getString((fileCursor.getColumnIndex("filename"))));
-                    file.setRawUrl(fileCursor.getString((fileCursor.getColumnIndex("rawUrl"))));
-
-                    List<File> files = new ArrayList<>();
-                    files.add(file);
-                    Files mainFiles = new Files(files);
-                    gist.setFiles(mainFiles);
-                }
-
-                inGists.add(gist);
-                cursor.moveToNext();
-            }
-        }
-
-        return inGists;
+        return null;
     }
 
-    private void saveAllGists(ArrayList<Gist> inGists){
-        if (inGists != null){
-            for (Gist gist : inGists){
-                createGistRegistry(gist);
-            }
-        }
-    }
-
-    private void createGistRegistry(Gist gist){
-        if ( db != null) {
-
-            //Check if Gist already Exist
-            String gistQueryFile = "select * from Gist where id = " + "'" + gist.getId().toString() + "'";
-            Cursor cursor = db.rawQuery(gistQueryFile, null);
-            if (cursor != null && cursor.moveToFirst()) {}
-            else{
-                //new Gist Registry to Insert
-                ContentValues gistRegistry = new ContentValues();
-
-                gistRegistry.put("id", gist.getId());
-                gistRegistry.put("createdAt", fixDateFormat(gist.getCreatedAt()));
-                gistRegistry.put("description", gist.getDescription());
-
-                db.insert("Gist", null, gistRegistry);
-
-                //new Owner Registry to Insert
-                if (gist.getOwner() != null) {
-                    ContentValues ownerRegistry = new ContentValues();
-
-                    ownerRegistry.put("id", gist.getOwner().getId());
-                    ownerRegistry.put("login", gist.getOwner().getLogin());
-                    ownerRegistry.put("avatarUrl", gist.getOwner().getAvatarUrl());
-
-                    db.insert("Owner", null, ownerRegistry);
-                }
-
-                //new File Registry to Insert
-                if (gist.getFiles().getFiles() != null) {
-                    if (gist.getFiles().getFiles().size() > 0) {
-                        ContentValues fileRegistry = new ContentValues();
-
-                        fileRegistry.put("id", gist.getFiles().getFiles().get(0).getId());
-                        fileRegistry.put("filename", gist.getFiles().getFiles().get(0).getFilename());
-                        fileRegistry.put("rawUrl", gist.getFiles().getFiles().get(0).getRawUrl());
-
-                        db.insert("File", null, fileRegistry);
-                    }
-                }
-            }
+    private void saveAllGists(ArrayList<Gist> inGists) {
+        if (inGists != null) {
+            try {
+                createGists = new CreateGists(inGists, db);
+                Boolean result = createGists.execute().get();
+            } catch (ExecutionException e) {
+            } catch (InterruptedException f) {}
         }
     }
 
@@ -232,7 +157,7 @@ public class MainPresenter {
         mainActivity.deleteDatabase("GistsDB");
     }
 
-    private String fixDateFormat(String dateformat){
+    public static String fixDateFormat(String dateformat){
 
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
         Date date;

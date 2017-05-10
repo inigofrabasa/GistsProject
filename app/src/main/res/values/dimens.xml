@@ -15,4 +15,5 @@
     <dimen name="margintop_text">8dp</dimen>
     <dimen name="iconfile_size">30dp</dimen>
     <dimen name="margintop_file">15dp</dimen>
+    <dimen name="progressbar_dimen">50dp</dimen>
 </resources>
