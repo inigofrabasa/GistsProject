@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">My Gists</string>
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="login_card">unknown login</string>
+    <string name="timecard_card">no date</string>
+    <string name="numbercomments_card">0</string>
+    <string name="textcomments_card">" comments"</string>
+    <string name="description_card">No description</string>
+    <string name="maxlines_description">2</string>
+    <string name="file_name">no file</string>
+    <string name="filename_maxlines">1</string>
+    <string name="toolbar_title_mainactivity"> Gists</string>
+    <string name="toolbar_title_filevieweractivity"> Gist File</string>
+</resources>
