@@ -21,7 +21,7 @@ public class ObtainGists extends AsyncTask<Void, Void, ArrayList<Gist>> {
     }
 
     @Override
-    protected ArrayList<Gist> doInBackground(Void... voids) {
+    protected ArrayList<Gist> doInBackground( Void... voids ) {
         if (db != null){
             String gistQueryOwner ="select * from Gist order by datetime(createdAt) desc";
             Cursor cursor = db.rawQuery(gistQueryOwner, null);

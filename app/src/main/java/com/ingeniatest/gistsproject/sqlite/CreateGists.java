@@ -76,6 +76,4 @@ public class CreateGists extends AsyncTask<Void, Void, Boolean> {
     protected void onPostExecute(Boolean aBoolean) {
         super.onPostExecute(aBoolean);
     }
-
-
 }

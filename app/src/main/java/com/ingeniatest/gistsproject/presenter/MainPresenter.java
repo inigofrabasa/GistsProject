@@ -34,7 +34,7 @@ public class MainPresenter {
     private ObtainGists obtainGists;
 
     //Handler for autoRefresh
-    Handler handler;
+    private Handler handler;
     final Integer MILISECONDS_UPDATE = 900000; // every 15 minutes
 
     //SQLite
